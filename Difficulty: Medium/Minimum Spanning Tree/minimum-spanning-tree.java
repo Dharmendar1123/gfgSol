@@ -38,34 +38,78 @@ public class Main {
 // User function Template for Java
 
 class Solution {
-    static int spanningTree(int V, int E, List<List<int[]>> adj) {
-        // Code Here.
-        PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> a[0]-b[0]);
-        boolean[] inMST = new boolean[V];
-        pq.offer(new int[] {0, 0});
+    
+    static int[] parent;
+    static int[] rank;
+    
+    static int find(int x) {
+        if (x == parent[x]) {
+            return x;
+        }
+        
+        return parent[x] = find(parent[x]);
+    }
+    
+    static void union(int x, int y) {
+        int parentX = find(x);
+        int parentY = find(y);
+        
+        if (parentX == parentY) {
+            return;
+        }
+        
+        if (rank[parentX] > rank[parentY]) {
+            parent[parentY] = parentX;
+        }else if (rank[parentX] < rank[parentY]) {
+            parent[parentX] = parentY;
+        }else {
+            parent[parentX] = parentY;
+            rank[parentY]++;
+        }
+    }
+    
+    static int kruskal(List<int[]> edges) {
         int sum = 0;
         
-        while (!pq.isEmpty()) {
-            int[] top = pq.poll();
-            int wt = top[0];
-            int node = top[1];
+        for (int[] temp : edges) {
+            int u = temp[0];
+            int v = temp[1];
+            int wt = temp[2];
             
-            if (inMST[node] == true) {
-                continue;
-            }
+            int parentU = find(u);
+            int parentV = find(v);
             
-            inMST[node] = true;
-            sum += wt;
-            
-            for (int[] temp : adj.get(node)) {
-                int neigh = temp[0];
-                int neighWt = temp[1];
-                
-                if (inMST[neigh] == false) {
-                    pq.offer(new int[] {neighWt, neigh});
-                }
+            if (parentU != parentV) {
+                union(u, v);
+                sum += wt;
             }
         }
+        
         return sum;
+    }
+    
+    static int spanningTree(int V, int E, List<List<int[]>> adj) {
+        // Code Here.
+        
+        parent = new int[V];
+        rank = new int[V];
+        for (int i = 0; i < V; ++i) {
+            parent[i] = i;
+        }
+        
+        List<int[]> edges = new ArrayList<>();
+        
+        for (int u = 0; u < V; ++u) {
+            for (int[] temp : adj.get(u)) {
+                int v = temp[0];
+                int wt = temp[1];
+                
+                edges.add(new int[] {u, v, wt});
+            }
+        }
+        
+        Collections.sort(edges, (a, b) -> a[2] - b[2]);
+        
+        return kruskal(edges);
     }
 }
